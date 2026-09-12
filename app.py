@@ -7,13 +7,13 @@ from concurrent.futures import ThreadPoolExecutor
 
 # Page Configuration
 st.set_page_config(
-    page_title="CoinDCX Pro Quant",
+    page_title="CoinDCX Ultra Quant Terminal",
     layout="wide",
-    page_icon="💠",
+    page_icon="⚡",
     initial_sidebar_state="expanded"
 )
 
-# Professional Institutional UI
+# Professional Institutional UI Styling
 st.markdown("""
 <style>
     .stApp { background-color: #0b0e14; color: #d1d5db; font-family: 'Inter', sans-serif; }
@@ -27,13 +27,14 @@ st.markdown("""
     .metric-label { color: #9ca3af; font-weight: 500; }
     .warning-box { background-color: #451a03; border: 1px solid #b45309; color: #fde68a; padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; margin-top: 10px; }
     .status-badge { background: #1e293b; color: #38bdf8; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+    .score-badge { background: #065f46; color: #34d399; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="main-title">💠 Institutional Momentum Terminal</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">Multi-Timeframe Macro Alignment (4H/1D) • Zero-Liquidation Engine • Persistent Memory</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">⚡ Ultra-Quant Scalping Terminal</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">Advanced Momentum Scoring • 4H/1D Macro Filtration • Zero-Liquidation Engine</div>', unsafe_allow_html=True)
 
-# Normalization Map
+# Ticker Normalization Map
 SYMBOL_MAP = {
     "ARBITRUM": "ARB", "SHIBA": "SHIB", "SHIBAINU": "SHIB", "DOGECOIN": "DOGE",
     "MATIC": "POL", "RIPPLE": "XRP", "SOLANA": "SOL", "CARDANO": "ADA", "AVALANCHE": "AVAX", "POLKADOT": "DOT"
@@ -43,18 +44,18 @@ def normalize_ticker(raw_input):
     cleaned = raw_input.strip().upper().replace("USDT", "").replace("B-", "")
     return SYMBOL_MAP.get(cleaned, cleaned)
 
-# Persistent Session State (Fixes the disappearing custom coins bug)
+# Persistent Session State
 if "master_coin_list" not in st.session_state:
     st.session_state.master_coin_list = [
         "BTC", "ETH", "SOL", "BNB", "XRP", "DOGE", "ADA", "AVAX", "NEAR", "LINK",
         "PEPE", "SHIB", "WIF", "BONK", "FLOKI", "SUI", "APT", "INJ", "FET", "RENDER",
         "ARB", "OP", "TIA", "SEI", "STX", "FIL", "LTC", "BCH", "POL", "GALA",
         "LDO", "RUNE", "ATOM", "ETC", "ICP", "DOT", "UNI", "AAVE", "SAND", "MANA", 
-        "KAS", "TRX", "VET", "ALGO", "DYDX", "CRV", "SNX", "MASK", "GMX", "MAGIC"
+        "KAS", "TRX", "VET", "ALGO", "DYDX", "CRV", "SNX", "MASK", "GMX", "MAGIC", "ONDO", "PENDLE"
     ]
 
 if "active_watchlist" not in st.session_state:
-    st.session_state.active_watchlist = ["BTC", "ETH", "SOL", "PEPE", "SUI", "ARB", "WIF"]
+    st.session_state.active_watchlist = ["BTC", "ETH", "SOL", "PEPE", "SUI", "ARB", "WIF", "INJ"]
 
 # Callbacks
 def add_from_dropdown_callback():
@@ -79,9 +80,9 @@ def add_preset_l1s():
     for c in ["SOL", "AVAX", "SUI", "APT", "NEAR", "SEI"]:
         if c not in st.session_state.active_watchlist: st.session_state.active_watchlist.append(c)
 
-# Sidebar UI
+# Sidebar UI Controls
 st.sidebar.markdown("### 🔄 Control Panel")
-if st.sidebar.button("⚡ Refresh Data Now", use_container_width=True, type="primary"):
+if st.sidebar.button("⚡ Refresh Matrix Now", use_container_width=True, type="primary"):
     st.rerun()
 
 st.sidebar.markdown("---")
@@ -89,7 +90,7 @@ st.sidebar.markdown("### 🔍 Asset Directory")
 st.sidebar.selectbox("Select Asset from Directory:", options=st.session_state.master_coin_list, key="coin_dropdown_selection")
 st.sidebar.button("➕ Add Selected Asset", on_click=add_from_dropdown_callback, use_container_width=True)
 
-st.sidebar.text_input("Or Input Custom Ticker (e.g. ONDO):", key="manual_text_input", on_change=add_from_manual_callback)
+st.sidebar.text_input("Or Input Custom Ticker:", key="manual_text_input", on_change=add_from_manual_callback)
 st.sidebar.button("➕ Add Custom Asset", on_click=add_from_manual_callback, use_container_width=True)
 
 st.sidebar.markdown("---")
@@ -107,9 +108,9 @@ selected_coins = st.sidebar.multiselect(
 )
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("### ⚙️ Quant Parameters")
+st.sidebar.markdown("### ⚙️ Quant Engine Parameters")
 timeframe = st.sidebar.selectbox("Primary Scalp Resolution", ["1m", "5m", "15m"], index=1)
-strict_vol = st.sidebar.checkbox("Require Volume Spike (Strict)", value=True)
+strict_vol = st.sidebar.checkbox("Strict Volume Surge Filter", value=True)
 auto_refresh = st.sidebar.checkbox("Live Auto-Refresh (15s)", value=False)
 
 def calculate_indicators(df):
@@ -163,11 +164,10 @@ def format_price(price):
     else: return f"{price:.7f}"
 
 def evaluate_signal(coin_name):
-    # Primary Scalp TF
     df = fetch_data(coin_name, timeframe)
     if df is None or df.empty: return {"Coin": coin_name, "Error": True}
 
-    # Macro TFs (4H and 1D)
+    # Macro 4H & 1D Trend Context
     df_4h = fetch_data(coin_name, "4h")
     df_1d = fetch_data(coin_name, "1d")
     
@@ -193,27 +193,33 @@ def evaluate_signal(coin_name):
     signal, direction = "NEUTRAL ⚪", "NONE"
     vol_valid = True if not strict_vol else vol_spike
 
-    # Alignment Rules: Do not allow Scalp Longs if Macro is Strong Bear
     if bull_ema and bull_macd and (45 < rsi < 75) and vol_valid and "Strong Bear" not in macro_trend:
         signal, direction = "LONG 🟢", "LONG"
     elif bear_ema and bear_macd and (25 < rsi < 55) and vol_valid and "Strong Bull" not in macro_trend:
         signal, direction = "SHORT 🔴", "SHORT"
 
+    scalp_score = 50
+    rrr = 0.0
     if direction == "LONG":
         entry, sl, tp = price, price - (1.5 * atr), price + (3.0 * atr)
         leverage = min(max(int(0.5 / ((entry - sl) / entry)), 1), 10)
         est_liq_price = entry * (1 - (1 / leverage) * 0.9)
         if sl <= est_liq_price: direction, signal = "NONE", "NEUTRAL ⚪"
+        else:
+            rrr = round((tp - entry) / (entry - sl), 2)
+            scalp_score = int(min(max((rsi * 0.3) + (20 if vol_spike else 0) + (30 if "Strong Bull" in macro_trend else 15), 10), 99))
     elif direction == "SHORT":
         entry, sl, tp = price, price + (1.5 * atr), price - (3.0 * atr)
         leverage = min(max(int(0.5 / ((sl - entry) / entry)), 1), 10)
         est_liq_price = entry * (1 + (1 / leverage) * 0.9)
         if sl >= est_liq_price: direction, signal = "NONE", "NEUTRAL ⚪"
+        else:
+            rrr = round((entry - tp) / (sl - entry), 2)
+            scalp_score = int(min(max(((100 - rsi) * 0.3) + (20 if vol_spike else 0) + (30 if "Strong Bear" in macro_trend else 15), 10), 99))
     else:
         entry, sl, tp, leverage, est_liq_price = price, 0.0, 0.0, 1, 0.0
 
     entry_status, time_to_tp_min, warning_flag = "WAITING", 0, None
-
     if direction != "NONE":
         tf_mins = {"1m": 1, "5m": 5, "15m": 15}.get(timeframe, 5)
         time_to_tp_min = int((abs(tp - price) / atr) * tf_mins) if atr > 0 else 0
@@ -222,17 +228,18 @@ def evaluate_signal(coin_name):
             if sl < price <= entry: entry_status = "IN ENTRY ZONE 🎯"
             elif price > entry: entry_status = "RUNNING IN PROFIT 🚀"
             if last['MACD_Hist'] < prev['MACD_Hist'] or rsi > 72:
-                warning_flag = "⚠️ Momentum Fading! Move SL to breakeven or close early."
-                
+                warning_flag = "⚠️ Momentum Fading! Move SL to breakeven."
         elif direction == "SHORT":
             if sl > price >= entry: entry_status = "IN ENTRY ZONE 🎯"
             elif price < entry: entry_status = "RUNNING IN PROFIT 🚀"
             if last['MACD_Hist'] > prev['MACD_Hist'] or rsi < 28:
-                warning_flag = "⚠️ Momentum Reversing! Move SL to breakeven or close early."
+                warning_flag = "⚠️ Momentum Reversing! Move SL to breakeven."
 
     return {
         "Coin": coin_name,
         "Signal": signal,
+        "Scalp Score": scalp_score,
+        "Macro": macro_trend,
         "Price": price,
         "F_Price": format_price(price),
         "Entry": format_price(entry) if direction != "NONE" else "-",
@@ -240,7 +247,7 @@ def evaluate_signal(coin_name):
         "TP": format_price(tp) if direction != "NONE" else "-",
         "Liq_Price": format_price(est_liq_price) if direction != "NONE" else "-",
         "Lev": f"{leverage}x",
-        "Macro": macro_trend,
+        "RRR": f"1:{rrr}" if rrr > 0 else "-",
         "Entry_Status": entry_status,
         "ETA_TP": f"~{time_to_tp_min} mins" if time_to_tp_min > 0 else "-",
         "Warning": warning_flag,
@@ -248,30 +255,33 @@ def evaluate_signal(coin_name):
         "Error": False
     }
 
-# Main Execution
+# Main Execution & Rendering Matrix
 if selected_coins:
-    with st.spinner("Analyzing High & Low Timeframes..."):
+    with st.spinner("Running Ultra-Quant multi-timeframe evaluation..."):
         with ThreadPoolExecutor(max_workers=8) as executor:
             raw_results = list(executor.map(evaluate_signal, selected_coins))
     results = [r for r in raw_results if not r.get("Error")]
     failed = [r["Coin"] for r in raw_results if r.get("Error")]
 else:
     results, failed = [], []
-    st.info("💡 Select assets to build your matrix.")
+    st.info("💡 Select assets from the sidebar matrix to initialize scanning.")
 
 if failed: st.warning(f"⚠️ Could not fetch market data for: {', '.join(failed)}")
 
 if results:
     df = pd.DataFrame(results).drop(columns=["Error"])
+    # Sort by highest Scalp Score automatically
+    df = df.sort_values(by="Scalp Score", ascending=False).reset_index(drop=True)
+
     m1, m2, m3, m4 = st.columns(4)
     m1.metric("Assets Monitored", len(results))
     m2.metric("Active Long Setups", len(df[df['Signal'] == "LONG 🟢"]))
     m3.metric("Active Short Setups", len(df[df['Signal'] == "SHORT 🔴"]))
-    m4.metric("Macro Alignment", "ACTIVE 🛡️")
+    m4.metric("Liquidation Guard", "ACTIVE 🛡️")
     st.markdown("<br>", unsafe_allow_html=True)
 
     active_setups = df[df['Signal'].str.contains("LONG|SHORT")]
-    st.markdown("### ⚡ Validated Execution Setups")
+    st.markdown("### 🔥 Top Ranked Scalp Setups")
     
     if not active_setups.empty:
         cols = st.columns(min(len(active_setups), 3))
@@ -282,26 +292,29 @@ if results:
                 <div class="trade-card {card_class}">
                     <div class="card-header">
                         <span>{row['Coin']}-PERP</span>
-                        <span style="font-size:0.85rem; border:1px solid currentColor; padding:2px 8px; border-radius:12px;">{row['Signal']}</span>
+                        <span class="score-badge">Score: {row['Scalp Score']}/99</span>
                     </div>
-                    <div style="margin-bottom: 8px;"><span class="status-badge">{row['Entry_Status']}</span></div>
-                    <div class="card-metric"><span class="metric-label">Macro 4H/1D Trend:</span> <span style="color:#f3f4f6;">{row['Macro']}</span></div>
+                    <div style="margin-bottom: 8px; display:flex; justify-content:space-between;">
+                        <span class="status-badge">{row['Signal']}</span>
+                        <span style="font-size:0.75rem; color:#9ca3af;">{row['Entry_Status']}</span>
+                    </div>
+                    <div class="card-metric"><span class="metric-label">Macro Trend (4H/1D):</span> <span style="color:#f3f4f6;">{row['Macro']}</span></div>
                     <div class="card-metric"><span class="metric-label">Current / Entry:</span> <span style="color:#f3f4f6; font-weight:600;">${row['F_Price']}</span></div>
                     <div class="card-metric"><span class="metric-label">Stop Loss (SL):</span> <span style="color:#ef4444;">${row['SL']}</span></div>
                     <div class="card-metric"><span class="metric-label">Take Profit (TP):</span> <span style="color:#10b981;">${row['TP']}</span></div>
-                    <div class="card-metric"><span class="metric-label">Est. Liquidation:</span> <span style="color:#f59e0b;">${row['Liq_Price']}</span></div>
-                    <div class="card-metric"><span class="metric-label">Safe Leverage:</span> <span style="color:#38bdf8;">{row['Lev']}</span></div>
+                    <div class="card-metric"><span class="metric-label">Risk-Reward (RRR):</span> <span style="color:#38bdf8;">{row['RRR']}</span></div>
+                    <div class="card-metric"><span class="metric-label">Est. Liquidation:</span> <span style="color:#f59e0b;">${row['Liq_Price']} ({row['Lev']})</span></div>
                     {'<div class="warning-box">' + row['Warning'] + '</div>' if row['Warning'] else ''}
                     <hr style="border:0; height:1px; background:#1f2937; margin:10px 0;">
-                    <div><a href="{row['Trade_Link']}" target="_blank" style="color:#3b82f6; text-decoration:none; font-weight:600;">↗ Open Chart on CoinDCX</a></div>
+                    <div><a href="{row['Trade_Link']}" target="_blank" style="color:#3b82f6; text-decoration:none; font-weight:600;">↗ Trade on CoinDCX Terminal</a></div>
                 </div>
                 """, unsafe_allow_html=True)
     else:
-        st.info("No active setups meeting Macro Alignment & strict criteria right now.")
+        st.info("No active setups meeting high-score scalp thresholds right now.")
 
     st.markdown("---")
-    st.markdown("### 📊 Complete Quant Matrix")
-    display_df = df[['Coin', 'Signal', 'Macro', 'F_Price', 'Entry_Status', 'Lev', 'Trade_Link']].rename(
+    st.markdown("### 📊 Ranked Quant Matrix")
+    display_df = df[['Coin', 'Signal', 'Scalp Score', 'Macro', 'RRR', 'F_Price', 'Entry_Status', 'Lev', 'Trade_Link']].rename(
         columns={"F_Price": "Price", "Entry_Status": "Status"}
     )
     def style_dataframe(val):
