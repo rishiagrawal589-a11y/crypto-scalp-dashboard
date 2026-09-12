@@ -5,11 +5,74 @@ import requests
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-# Page Setup
-st.set_page_config(page_title="CoinDCX Scalp Engine & Custom Watchlist", layout="wide", page_icon="⚡")
+# Page Configuration
+st.set_page_config(
+    page_title="CoinDCX Futures Terminal",
+    layout="wide",
+    page_icon="⚡",
+    initial_sidebar_state="expanded"
+)
 
-st.title("⚡ CoinDCX Precision Scalp Engine")
-st.caption("Scans real-time market structure with dynamic coin selection to generate exact Entry, SL, TP, and Leverage.")
+# Custom High-Contrast Professional Dark Theme CSS
+st.markdown("""
+<style>
+    /* Global Container Adjustments */
+    .stApp {
+        background-color: #0d1117;
+        color: #c9d1d9;
+    }
+    
+    /* Header Styling */
+    .main-title {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #f0f6fc;
+        margin-bottom: 0px;
+    }
+    .sub-title {
+        font-size: 0.95rem;
+        color: #8b949e;
+        margin-bottom: 25px;
+    }
+
+    /* Signal Cards Styling */
+    .trade-card {
+        background-color: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 15px;
+    }
+    .trade-card-long {
+        border-left: 5px solid #238636;
+    }
+    .trade-card-short {
+        border-left: 5px solid #da3633;
+    }
+    
+    /* Execution Link Buttons */
+    .stButton>button, div.stDownloadButton>button, a.trade-btn {
+        display: inline-block;
+        width: 100%;
+        text-align: center;
+        background-color: #21262d;
+        color: #58a6ff !important;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-weight: 600;
+        text-decoration: none !important;
+        transition: all 0.2s ease;
+    }
+    a.trade-btn:hover {
+        background-color: #30363d;
+        border-color: #8b949e;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown('<div class="main-title">⚡ CoinDCX Perpetual Signals Terminal</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">Real-time quantitative momentum scanner with dynamic Entry, SL, TP & Position Risk Metrics.</div>', unsafe_allow_html=True)
 
 # Master list of preset popular coins across sectors
 PRESET_COINS = [
@@ -18,36 +81,27 @@ PRESET_COINS = [
 ]
 
 # Sidebar Controls
-st.sidebar.header("🎯 Coin Watchlist Selection")
+st.sidebar.markdown("### 🎯 Watchlist Controls")
 
-# 1. Custom Text Input for unlisted coins
-custom_text_input = st.sidebar.text_input("Add Unlisted Ticker (e.g., WIF, KAS):", value="").strip().upper()
+# Custom Text Input for unlisted coins
+custom_text_input = st.sidebar.text_input("Add Unlisted Symbol (e.g. WIF):", value="").strip().upper()
 
-# 2. Dynamic Multiselect Dropdown
 default_selected = ["BTC", "ETH", "SOL", "PEPE", "SUI"]
 if custom_text_input and custom_text_input not in PRESET_COINS:
     PRESET_COINS.insert(0, custom_text_input)
     default_selected.insert(0, custom_text_input)
 
 selected_coins = st.sidebar.multiselect(
-    "Active Scanner Watchlist:",
+    "Active Coins Scanner List:",
     options=PRESET_COINS,
     default=default_selected
 )
 
-# 3. Quick Sector Presets
-st.sidebar.markdown("**Quick Preset Buttons:**")
-col_p1, col_p2 = st.sidebar.columns(2)
-if col_p1.button("🔥 Memes"):
-    selected_coins = list(set(selected_coins + ["PEPE", "DOGE", "SHIB"]))
-if col_p2.button("🚀 Layer-1s"):
-    selected_coins = list(set(selected_coins + ["SOL", "AVAX", "SUI", "APT", "NEAR"]))
-
 st.sidebar.markdown("---")
-st.sidebar.header("🛡️ Risk Controls")
-timeframe = st.sidebar.selectbox("Signal Timeframe", ["1m", "5m", "15m"], index=1)
-max_risk_pct = st.sidebar.slider("Max Risk % per Trade", 0.5, 3.0, 1.0) / 100
-auto_refresh = st.sidebar.checkbox("Auto Refresh (10s)", value=False)
+st.sidebar.markdown("### 🛡️ Risk Parameters")
+timeframe = st.sidebar.selectbox("Analysis Timeframe", ["1m", "5m", "15m"], index=1)
+max_risk_pct = st.sidebar.slider("Account Risk per Trade (%)", 0.5, 3.0, 1.0) / 100
+auto_refresh = st.sidebar.checkbox("Auto Refresh (Every 10s)", value=False)
 
 def calculate_indicators(df):
     df['EMA_9'] = df['close'].ewm(span=9, adjust=False).mean()
@@ -89,7 +143,7 @@ def fetch_data(coin_symbol, tf):
     except Exception:
         pass
 
-    # Backup Source: Bybit API
+    # Secondary Source: Bybit API
     try:
         bybit_interval = {"1m": "1", "5m": "5", "15m": "15"}.get(tf, "5")
         url = f"https://api.bybit.com/v5/market/kline?category=linear&symbol={bybit_symbol}&interval={bybit_interval}&limit=50"
@@ -146,12 +200,14 @@ def evaluate_signal(df, coin_name):
     else:
         entry_price, sl_price, tp_price, rec_leverage, rrr = price, 0.0, 0.0, 1, 0.0
 
-    trade_url = f"https://coindcx.com/futures/{coin_name}USDT"
+    # Fixed Dynamic Link Generation directly pointing to the specific coin chart
+    trade_url = f"https://coindcx.com/futures/B-{coin_name}_USDT"
     decimals = 6 if price < 1 else 4
 
     return {
         "Coin": coin_name,
         "Signal": signal,
+        "Price ($)": round(price, decimals),
         "Entry Zone ($)": round(entry_price, decimals),
         "Stop Loss ($)": round(sl_price, decimals),
         "Take Profit ($)": round(tp_price, decimals),
@@ -173,30 +229,41 @@ if selected_coins:
         results = list(filter(None, executor.map(process_item, selected_coins)))
 else:
     results = []
-    st.info("💡 Please select at least one coin from the sidebar selection box.")
+    st.info("💡 Please select at least one cryptocurrency from the sidebar to start scanning.")
 
 if len(results) > 0:
     results_df = pd.DataFrame(results)
 
-    # Active Execution Cards
-    st.subheader(f"🔥 Active Scalp Targets ({len(results_df[results_df['Signal'].str.contains('LONG|SHORT')])} Signals)")
+    # High-Priority Trade Execution Cards
+    st.markdown("### 🔥 High-Confidence Active Setups")
     active_setups = results_df[results_df['Signal'].str.contains("LONG|SHORT")]
 
     if not active_setups.empty:
         cols = st.columns(min(len(active_setups), 3))
         for i, (_, row) in enumerate(active_setups.iterrows()):
+            card_class = "trade-card-long" if "LONG" in row['Signal'] else "trade-card-short"
             with cols[i % 3]:
-                st.subheader(f"{row['Coin']} | {row['Signal']}")
-                st.write(f"📍 **Entry Zone:** `${row['Entry Zone ($)']}`")
-                st.write(f"🛑 **Stop Loss:** `${row['Stop Loss ($)']}`")
-                st.write(f"🎯 **Take Profit:** `${row['Take Profit ($)']}`")
-                st.write(f"⚡ **Rec. Leverage:** `{row['Rec. Leverage']}` | **RRR:** `{row['Risk-Reward']}`")
-                st.markdown(f"[👉 Execute Trade on CoinDCX]({row['Trade']})")
+                st.markdown(f"""
+                <div class="trade-card {card_class}">
+                    <h4 style="margin:0; color:#f0f6fc;">{row['Coin']} Perpetual — <span style="font-size:0.9em;">{row['Signal']}</span></h4>
+                    <hr style="border-color:#30363d; margin: 10px 0;">
+                    <p style="margin:4px 0;"><b>Entry Zone:</b> ${row['Entry Zone ($)']}</p>
+                    <p style="margin:4px 0;"><b>Stop Loss:</b> ${row['Stop Loss ($)']}</p>
+                    <p style="margin:4px 0;"><b>Take Profit:</b> ${row['Take Profit ($)']}</p>
+                    <p style="margin:4px 0;"><b>Optimal Leverage:</b> {row['Rec. Leverage']} | <b>RRR:</b> {row['Risk-Reward']}</p>
+                    <p style="margin:4px 0;"><b>RSI:</b> {row['RSI']} | <b>Volume:</b> {row['Vol Spike']}</p>
+                    <div style="margin-top: 12px;">
+                        <a class="trade-btn" href="{row['Trade']}" target="_blank">📈 Open {row['Coin']} Chart on CoinDCX</a>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
     else:
-        st.info("No active setups matching risk-reward criteria across selected coins right now.")
+        st.info("No active directional setups detected across your selected coins right now.")
 
-    # Scanner Table
-    st.subheader("📊 Active Selected Watchlist Matrix")
+    st.markdown("---")
+
+    # Scanner Table Matrix
+    st.markdown("### 📊 Market Overview Matrix")
 
     def highlight_row(val):
         if "LONG" in val: return 'background-color: #1b4332; color: #52b788; font-weight: bold;'
@@ -206,7 +273,7 @@ if len(results) > 0:
     st.dataframe(
         results_df.style.map(highlight_row, subset=['Signal']),
         column_config={
-            "Trade": st.column_config.LinkColumn("CoinDCX Direct Link", display_text="Open Chart")
+            "Trade": st.column_config.LinkColumn("CoinDCX Direct Link", display_text="Open Terminal")
         },
         use_container_width=True
     )
