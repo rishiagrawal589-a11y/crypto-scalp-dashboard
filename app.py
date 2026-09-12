@@ -3,12 +3,12 @@ import pandas as pd
 import numpy as np
 import requests
 import time
+from concurrent.futures import ThreadPoolExecutor
 
-# Configure Web App Layout
-st.set_page_config(page_title="Crypto Scalp Signal Dashboard", layout="wide", page_icon="⚡")
+st.set_page_config(page_title="CoinDCX Futures Scalp Dashboard", layout="wide", page_icon="⚡")
 
-st.title("⚡ Live Crypto Scalping & Trend Signal Dashboard")
-st.caption("Scans real-time futures market data to identify scalp entries with exact SL & TP target prices.")
+st.title("⚡ Live CoinDCX Scalping & Trend Signal Dashboard")
+st.caption("Scans real-time CoinDCX futures market data to identify scalp entries with exact SL & TP target prices.")
 
 # User Sidebar Options
 st.sidebar.header("⚙️ Scalp Settings")
@@ -18,10 +18,20 @@ sl_pct = st.sidebar.slider("Stop Loss %", 0.3, 2.0, 0.8) / 100
 tp_pct = st.sidebar.slider("Take Profit %", 0.5, 5.0, 1.5) / 100
 auto_refresh = st.sidebar.checkbox("Auto Refresh (Every 10s)", value=False)
 
-# List of top liquid futures coins to scan
-COINS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT", "DOGEUSDT", "ADAUSDT", "AVAXUSDT", "NEARUSDT", "LINKUSDT"]
+# CoinDCX Futures Pairs (B- prefix indicates Binance liquidity pool used by CoinDCX)
+COINDCX_PAIRS = {
+    "BTCUSDT": "B-BTC_USDT",
+    "ETHUSDT": "B-ETH_USDT",
+    "SOLUSDT": "B-SOL_USDT",
+    "BNBUSDT": "B-BNB_USDT",
+    "XRPUSDT": "B-XRP_USDT",
+    "DOGEUSDT": "B-DOGE_USDT",
+    "ADAUSDT": "B-ADA_USDT",
+    "AVAXUSDT": "B-AVAX_USDT",
+    "NEARUSDT": "B-NEAR_USDT",
+    "LINKUSDT": "B-LINK_USDT"
+}
 
-# Technical Indicator Calculations
 def calculate_indicators(df):
     df['EMA_9'] = df['close'].ewm(span=9, adjust=False).mean()
     df['EMA_21'] = df['close'].ewm(span=21, adjust=False).mean()
@@ -29,31 +39,32 @@ def calculate_indicators(df):
     delta = df['close'].diff()
     gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-    rs = gain / loss
+    rs = gain / (loss.replace(0, 0.00001))
     df['RSI'] = 100 - (100 / (1 + rs))
     
     df['Vol_SMA'] = df['volume'].rolling(window=20).mean()
     return df
 
-# Fetch Live Binance Market Data with headers to prevent block
-def fetch_klines(symbol, interval):
-    url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit=50"
-    headers = {"User-Agent": "Mozilla/5.0"}
+def fetch_coindcx_klines(symbol_name, coindcx_pair, interval):
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+    url = f"https://public.coindcx.com/market_data/candles/?pair={coindcx_pair}&interval={interval}&limit=50"
+    
     try:
         res = requests.get(url, headers=headers, timeout=5)
-        if res.status_code != 200:
-            return None
-        data = res.json()
-        if not isinstance(data, list) or len(data) == 0:
-            return None
-        df = pd.DataFrame(data, columns=['time', 'open', 'high', 'low', 'close', 'volume', '_', '_', '_', '_', '_', '_'])
-        df['close'] = df['close'].astype(float)
-        df['volume'] = df['volume'].astype(float)
-        return calculate_indicators(df)
+        if res.status_code == 200:
+            data = res.json()
+            if isinstance(data, list) and len(data) > 0:
+                # CoinDCX returns data ordered from newest to oldest
+                df = pd.DataFrame(data)
+                df = df.iloc[::-1].reset_index(drop=True)
+                df['close'] = df['close'].astype(float)
+                df['volume'] = df['volume'].astype(float)
+                return calculate_indicators(df)
     except Exception:
-        return None
+        pass
 
-# Generate Trade Signal Logic
+    return None
+
 def get_signal(df, symbol):
     last = df.iloc[-1]
     prev = df.iloc[-2]
@@ -93,20 +104,20 @@ def get_signal(df, symbol):
         "TP Target ($)": round(tp_price, 4)
     }
 
-# Main Execution Loop
-results = []
-for coin in COINS:
-    df = fetch_klines(coin, timeframe)
+def process_pair(item):
+    symbol_name, coindcx_pair = item
+    df = fetch_coindcx_klines(symbol_name, coindcx_pair, timeframe)
     if df is not None and not df.empty and len(df) > 20:
-        results.append(get_signal(df, coin))
+        return get_signal(df, symbol_name)
+    return None
 
-# Check if data was fetched successfully
+with ThreadPoolExecutor(max_workers=5) as executor:
+    results = list(filter(None, executor.map(process_pair, COINDCX_PAIRS.items())))
+
 if len(results) > 0:
     results_df = pd.DataFrame(results)
 
-    # Display Top Cards for Quick Scalp Alerts
     st.subheader("🚀 High-Confidence Scalp Alerts")
-    
     if 'Signal' in results_df.columns:
         strong_signals = results_df[results_df['Signal'].isin(["STRONG BUY", "STRONG SELL"])]
 
@@ -121,7 +132,6 @@ if len(results) > 0:
         else:
             st.info("No High-Confidence (Volume Spike) setups detected right now. Watch the live matrix below.")
 
-    # Render Complete Market Matrix Table
     st.subheader("📊 All Coins Live Matrix")
 
     def color_signals(val):
@@ -134,9 +144,8 @@ if len(results) > 0:
     st.dataframe(results_df.style.map(color_signals, subset=['Signal']), use_container_width=True)
 
 else:
-    st.error("⚠️ Unable to fetch market data from Binance API right now. Please wait a moment or click Refresh.")
+    st.warning("⚠️ Connecting to CoinDCX servers... Click 'Refresh' or toggle Auto Refresh in the sidebar.")
 
-# Auto Refresh loop option
 if auto_refresh:
     time.sleep(10)
     st.rerun()
