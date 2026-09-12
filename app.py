@@ -46,32 +46,53 @@ st.markdown("""
 st.markdown('<div class="main-title">⚡ CoinDCX Perpetual Quantitative Terminal</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">Multi-Timeframe Quantitative Momentum Engine & Direct Execution Risk Calculator.</div>', unsafe_allow_html=True)
 
-# Master database of supported CoinDCX Perpetual symbols for the dropdown selector
+# Common Symbol Normalization Mapping (Translates user typos/names to standard Futures Tickers)
+SYMBOL_MAP = {
+    "ARBITRUM": "ARB",
+    "SHIBA": "SHIB",
+    "SHIBAINU": "SHIB",
+    "DOGECOIN": "DOGE",
+    "MATIC": "POL",
+    "RIPPLE": "XRP",
+    "SOLANA": "SOL",
+    "CARDANO": "ADA",
+    "AVALANCHE": "AVAX",
+    "POLKADOT": "DOT"
+}
+
+# Standardized Master Database of Futures Symbols
 ALL_DCX_COINS = [
     "BTC", "ETH", "SOL", "BNB", "XRP", "DOGE", "ADA", "AVAX", "NEAR", "LINK",
     "PEPE", "SHIB", "WIF", "BONK", "FLOKI", "SUI", "APT", "INJ", "FET", "RENDER",
-    "ARBITRUM", "OP", "TIA", "SEI", "STX", "FIL", "LTC", "BCH", "MATIC", "GALA",
-    "LDO", "RUNE", "ATOM", "ETC", "ICP", "DOT", "UNI", "AAVE", "SAND", "MANA"
+    "ARB", "OP", "TIA", "SEI", "STX", "FIL", "LTC", "BCH", "POL", "GALA",
+    "LDO", "RUNE", "ATOM", "ETC", "ICP", "DOT", "UNI", "AAVE", "SAND", "MANA", "KAS"
 ]
+
+# Helper function to sanitize user input
+def normalize_ticker(raw_input):
+    cleaned = raw_input.strip().upper().replace("USDT", "").replace("B-", "")
+    return SYMBOL_MAP.get(cleaned, cleaned)
 
 # Initialize Session State Watchlist safely
 if "active_watchlist" not in st.session_state:
-    st.session_state.active_watchlist = ["BTC", "ETH", "SOL", "PEPE", "SUI"]
+    st.session_state.active_watchlist = ["BTC", "ETH", "SOL", "PEPE", "SUI", "ARB"]
 
 # Callback Handler for Dropdown Add Button
 def add_from_dropdown_callback():
     selected_drop_coin = st.session_state.coin_dropdown_selection
-    if selected_drop_coin and selected_drop_coin not in st.session_state.active_watchlist:
-        st.session_state.active_watchlist.append(selected_drop_coin)
+    normalized = normalize_ticker(selected_drop_coin)
+    if normalized and normalized not in st.session_state.active_watchlist:
+        st.session_state.active_watchlist.append(normalized)
 
 # Callback Handler for Manual Input Add Button
 def add_from_manual_callback():
-    manual_coin = st.session_state.manual_text_input.strip().upper()
-    if manual_coin:
-        if manual_coin not in ALL_DCX_COINS:
-            ALL_DCX_COINS.insert(0, manual_coin)
-        if manual_coin not in st.session_state.active_watchlist:
-            st.session_state.active_watchlist.append(manual_coin)
+    raw_coin = st.session_state.manual_text_input
+    if raw_coin:
+        normalized = normalize_ticker(raw_coin)
+        if normalized not in ALL_DCX_COINS:
+            ALL_DCX_COINS.insert(0, normalized)
+        if normalized not in st.session_state.active_watchlist:
+            st.session_state.active_watchlist.append(normalized)
         st.session_state.manual_text_input = ""
 
 # Callback Handlers for Sector Quick Buttons
@@ -90,16 +111,17 @@ st.sidebar.markdown("### 🔍 Search & Add Custom Coins")
 
 # 1. Dropdown Feature for Custom Coin Selection
 st.sidebar.selectbox(
-    "Select Coin from CoinDCX List:",
+    "Select Coin from List:",
     options=ALL_DCX_COINS,
     key="coin_dropdown_selection"
 )
 st.sidebar.button("➕ Add Selected Coin to Scanner", on_click=add_from_dropdown_callback)
 
 st.sidebar.markdown("---")
-# 2. Backup Manual Input (for rare unlisted symbols)
+
+# 2. Manual Text Input (Normalizes inputs automatically)
 st.sidebar.text_input(
-    "Or Type Ticker Symbol Manually:", 
+    "Or Type Ticker Symbol (e.g., ARB, KAS, WIF):", 
     key="manual_text_input",
     on_change=add_from_manual_callback
 )
@@ -113,10 +135,10 @@ col_p2.button("🚀 Layer-1s", on_click=add_preset_l1s)
 
 st.sidebar.markdown("---")
 
-# 4. Active Scanner List Multiselect (Displays currently loaded watchlist)
+# 4. Active Scanner List Multiselect
 selected_coins = st.sidebar.multiselect(
     "Active Scanner Watchlist:",
-    options=list(set(ALL_DCX_COINS + st.session_state.active_watchlist)),
+    options=list(dict.fromkeys(ALL_DCX_COINS + st.session_state.active_watchlist)),
     default=st.session_state.active_watchlist,
     key="active_watchlist"
 )
@@ -167,7 +189,7 @@ def fetch_data(coin_symbol, tf):
     except Exception:
         pass
 
-    # Secondary Fallback Source: Bybit API
+    # Secondary Backup Source: Bybit API
     try:
         bybit_interval = {"1m": "1", "5m": "5", "15m": "15"}.get(tf, "5")
         url = f"https://api.bybit.com/v5/market/kline?category=linear&symbol={bybit_symbol}&interval={bybit_interval}&limit=50"
@@ -187,7 +209,7 @@ def fetch_data(coin_symbol, tf):
 def evaluate_signal(coin_name):
     df_primary = fetch_data(coin_name, timeframe)
     if df_primary is None or df_primary.empty:
-        return None
+        return {"Coin": coin_name, "Error": True}
 
     last = df_primary.iloc[-1]
     price = last['close']
@@ -239,7 +261,6 @@ def evaluate_signal(coin_name):
     else:
         entry_price, sl_price, tp_price, rec_leverage, rrr = price, 0.0, 0.0, 1, 0.0
 
-    # Dynamic CoinDCX Perpetual futures chart link
     trade_url = f"https://coindcx.com/futures/B-{coin_name}_USDT"
     decimals = 6 if price < 1 else 4
 
@@ -255,18 +276,26 @@ def evaluate_signal(coin_name):
         "15m HTF Trend": htf_status,
         "RSI": rsi,
         "Vol Spike": "YES 🔥" if vol_spike else "NORMAL",
-        "Trade": trade_url
+        "Trade": trade_url,
+        "Error": False
     }
 
 if selected_coins:
     with ThreadPoolExecutor(max_workers=5) as executor:
-        results = list(filter(None, executor.map(evaluate_signal, selected_coins)))
+        raw_results = list(executor.map(evaluate_signal, selected_coins))
+    
+    results = [r for r in raw_results if not r.get("Error")]
+    failed_coins = [r["Coin"] for r in raw_results if r.get("Error")]
 else:
     results = []
+    failed_coins = []
     st.info("💡 Select or add coins using the sidebar controls to activate scanning.")
 
+if failed_coins:
+    st.warning(f"⚠️ Could not fetch market data for: **{', '.join(failed_coins)}**. Check if the ticker symbol is correct or active on futures.")
+
 if len(results) > 0:
-    results_df = pd.DataFrame(results)
+    results_df = pd.DataFrame(results).drop(columns=["Error"])
 
     # Active Execution Signal Cards
     st.markdown("### 🔥 High-Confidence Scalp Setups")
