@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom Institutional Dark-Theme CSS Styling
+# Custom Institutional Dark-Theme Styling
 st.markdown("""
 <style>
     .stApp {
@@ -46,66 +46,79 @@ st.markdown("""
 st.markdown('<div class="main-title">⚡ CoinDCX Perpetual Quantitative Terminal</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">Multi-Timeframe Quantitative Momentum Engine & Direct Execution Risk Calculator.</div>', unsafe_allow_html=True)
 
-# Master Presets
-PRESET_COINS = [
+# Master database of supported CoinDCX Perpetual symbols for the dropdown selector
+ALL_DCX_COINS = [
     "BTC", "ETH", "SOL", "BNB", "XRP", "DOGE", "ADA", "AVAX", "NEAR", "LINK",
-    "PEPE", "SHIB", "SUI", "APT", "INJ", "FET", "RENDER", "ARBITRUM", "OP", "TIA"
+    "PEPE", "SHIB", "WIF", "BONK", "FLOKI", "SUI", "APT", "INJ", "FET", "RENDER",
+    "ARBITRUM", "OP", "TIA", "SEI", "STX", "FIL", "LTC", "BCH", "MATIC", "GALA",
+    "LDO", "RUNE", "ATOM", "ETC", "ICP", "DOT", "UNI", "AAVE", "SAND", "MANA"
 ]
 
-# Initialize Session State Session Watchlist and All Available Options
-if "options_list" not in st.session_state:
-    st.session_state.options_list = list(PRESET_COINS)
+# Initialize Session State Watchlist safely
+if "active_watchlist" not in st.session_state:
+    st.session_state.active_watchlist = ["BTC", "ETH", "SOL", "PEPE", "SUI"]
 
-if "watchlist" not in st.session_state:
-    st.session_state.watchlist = ["BTC", "ETH", "SOL", "PEPE", "SUI"]
+# Callback Handler for Dropdown Add Button
+def add_from_dropdown_callback():
+    selected_drop_coin = st.session_state.coin_dropdown_selection
+    if selected_drop_coin and selected_drop_coin not in st.session_state.active_watchlist:
+        st.session_state.active_watchlist.append(selected_drop_coin)
 
-# Callback Functions for Custom Add Buttons
-def add_custom_coin_callback():
-    coin = st.session_state.custom_input_field.strip().upper()
-    if coin:
-        if coin not in st.session_state.options_list:
-            st.session_state.options_list.append(coin)
-        if coin not in st.session_state.watchlist:
-            st.session_state.watchlist.append(coin)
-        st.session_state.custom_input_field = ""
+# Callback Handler for Manual Input Add Button
+def add_from_manual_callback():
+    manual_coin = st.session_state.manual_text_input.strip().upper()
+    if manual_coin:
+        if manual_coin not in ALL_DCX_COINS:
+            ALL_DCX_COINS.insert(0, manual_coin)
+        if manual_coin not in st.session_state.active_watchlist:
+            st.session_state.active_watchlist.append(manual_coin)
+        st.session_state.manual_text_input = ""
 
+# Callback Handlers for Sector Quick Buttons
 def add_preset_memes():
-    for coin in ["PEPE", "DOGE", "SHIB"]:
-        if coin not in st.session_state.options_list:
-            st.session_state.options_list.append(coin)
-        if coin not in st.session_state.watchlist:
-            st.session_state.watchlist.append(coin)
+    for coin in ["PEPE", "DOGE", "SHIB", "WIF", "BONK"]:
+        if coin not in st.session_state.active_watchlist:
+            st.session_state.active_watchlist.append(coin)
 
 def add_preset_l1s():
-    for coin in ["SOL", "AVAX", "SUI", "APT", "NEAR"]:
-        if coin not in st.session_state.options_list:
-            st.session_state.options_list.append(coin)
-        if coin not in st.session_state.watchlist:
-            st.session_state.watchlist.append(coin)
+    for coin in ["SOL", "AVAX", "SUI", "APT", "NEAR", "SEI"]:
+        if coin not in st.session_state.active_watchlist:
+            st.session_state.active_watchlist.append(coin)
 
 # Sidebar Controls
-st.sidebar.markdown("### 🎯 Watchlist Controls")
+st.sidebar.markdown("### 🔍 Search & Add Custom Coins")
 
-# Custom Coin Text Input
-st.sidebar.text_input(
-    "Add Unlisted Ticker (e.g. WIF, KAS):", 
-    key="custom_input_field",
-    on_change=add_custom_coin_callback
+# 1. Dropdown Feature for Custom Coin Selection
+st.sidebar.selectbox(
+    "Select Coin from CoinDCX List:",
+    options=ALL_DCX_COINS,
+    key="coin_dropdown_selection"
 )
-st.sidebar.button("➕ Add Custom Coin", on_click=add_custom_coin_callback)
+st.sidebar.button("➕ Add Selected Coin to Scanner", on_click=add_from_dropdown_callback)
 
-# Preset Quick-Add Buttons
+st.sidebar.markdown("---")
+# 2. Backup Manual Input (for rare unlisted symbols)
+st.sidebar.text_input(
+    "Or Type Ticker Symbol Manually:", 
+    key="manual_text_input",
+    on_change=add_from_manual_callback
+)
+st.sidebar.button("➕ Add Manual Ticker", on_click=add_from_manual_callback)
+
+# 3. Quick Sector Presets
 st.sidebar.markdown("**Quick Sector Presets:**")
 col_p1, col_p2 = st.sidebar.columns(2)
 col_p1.button("🔥 Memes", on_click=add_preset_memes)
 col_p2.button("🚀 Layer-1s", on_click=add_preset_l1s)
 
-# Multiselect Control linked directly to session_state
+st.sidebar.markdown("---")
+
+# 4. Active Scanner List Multiselect (Displays currently loaded watchlist)
 selected_coins = st.sidebar.multiselect(
-    "Active Coins Scanner List (or type to add):",
-    options=st.session_state.options_list,
-    key="watchlist",
-    accept_new_options=True
+    "Active Scanner Watchlist:",
+    options=list(set(ALL_DCX_COINS + st.session_state.active_watchlist)),
+    default=st.session_state.active_watchlist,
+    key="active_watchlist"
 )
 
 st.sidebar.markdown("---")
@@ -140,7 +153,7 @@ def fetch_data(coin_symbol, tf):
     coindcx_pair = f"B-{coin_symbol}_USDT"
     bybit_symbol = f"{coin_symbol}USDT"
     
-    # Primary Source: CoinDCX Futures
+    # Primary Source: CoinDCX Futures API
     try:
         url = f"https://public.coindcx.com/market_data/candles/?pair={coindcx_pair}&interval={tf}&limit=50"
         res = requests.get(url, headers=headers, timeout=3)
@@ -154,7 +167,7 @@ def fetch_data(coin_symbol, tf):
     except Exception:
         pass
 
-    # Secondary Backup Source: Bybit API
+    # Secondary Fallback Source: Bybit API
     try:
         bybit_interval = {"1m": "1", "5m": "5", "15m": "15"}.get(tf, "5")
         url = f"https://api.bybit.com/v5/market/kline?category=linear&symbol={bybit_symbol}&interval={bybit_interval}&limit=50"
@@ -187,7 +200,7 @@ def evaluate_signal(coin_name):
     bullish = last['EMA_9'] > last['EMA_21']
     bearish = last['EMA_9'] < last['EMA_21']
 
-    # Multi-Timeframe Alignment (15m HTF Trend)
+    # Multi-Timeframe Alignment Check
     mtf_aligned = True
     htf_status = "N/A"
     if enable_mtf and timeframe != "15m":
@@ -226,7 +239,7 @@ def evaluate_signal(coin_name):
     else:
         entry_price, sl_price, tp_price, rec_leverage, rrr = price, 0.0, 0.0, 1, 0.0
 
-    # Direct Trading link format
+    # Dynamic CoinDCX Perpetual futures chart link
     trade_url = f"https://coindcx.com/futures/B-{coin_name}_USDT"
     decimals = 6 if price < 1 else 4
 
@@ -250,7 +263,7 @@ if selected_coins:
         results = list(filter(None, executor.map(evaluate_signal, selected_coins)))
 else:
     results = []
-    st.info("💡 Select or add coins in the sidebar to activate the quantitative scanner.")
+    st.info("💡 Select or add coins using the sidebar controls to activate scanning.")
 
 if len(results) > 0:
     results_df = pd.DataFrame(results)
