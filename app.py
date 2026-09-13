@@ -22,158 +22,38 @@ st.set_page_config(
 # ============================================================================
 st.markdown("""
 <style>
-    .stApp {
-        background-color: #090c10;
-        color: #c9d1d9;
-        font-family: 'Inter', -apple-system, sans-serif;
-    }
-    .main-title {
-        font-size: 2.2rem;
-        font-weight: 800;
-        color: #ffffff;
-        letter-spacing: -1px;
-        margin-bottom: 0px;
-    }
-    .sub-title {
-        font-size: 0.92rem;
-        color: #8b949e;
-        margin-bottom: 20px;
-        border-bottom: 1px solid #21262d;
-        padding-bottom: 12px;
-    }
+    .stApp { background-color: #090c10; color: #c9d1d9; font-family: 'Inter', -apple-system, sans-serif; }
+    .main-title { font-size: 2.2rem; font-weight: 800; color: #ffffff; letter-spacing: -1px; margin-bottom: 0px; }
+    .sub-title { font-size: 0.92rem; color: #8b949e; margin-bottom: 20px; border-bottom: 1px solid #21262d; padding-bottom: 12px; }
     
-    /* Institutional Trade Cards */
-    .trade-card {
-        background: #161b22;
-        border: 1px solid #30363d;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 18px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-        transition: transform 0.15s ease;
-        position: relative;
-    }
+    .trade-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; margin-bottom: 18px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); transition: transform 0.15s ease; position: relative; }
     .trade-card:hover { transform: translateY(-2px); }
     .trade-card-long { border-top: 4px solid #2ea043; }
     .trade-card-short { border-top: 4px solid #f85149; }
+    .trade-card-top { border: 1px solid #d29922 !important; border-top: 5px solid #e3b341 !important; box-shadow: 0 0 20px rgba(227, 179, 65, 0.18) !important; }
     
-    /* #1 Best Setup Highlighting */
-    .trade-card-top {
-        border: 1px solid #d29922 !important;
-        border-top: 5px solid #e3b341 !important;
-        box-shadow: 0 0 20px rgba(227, 179, 65, 0.18) !important;
-    }
-    .top-badge {
-        background: linear-gradient(90deg, #d29922, #f59e0b);
-        color: #000;
-        font-size: 0.72rem;
-        font-weight: 800;
-        padding: 3px 8px;
-        border-radius: 6px;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        margin-bottom: 10px;
-        display: inline-block;
-    }
-
-    .card-header {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #f0f6fc;
-        margin-bottom: 12px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .card-metric {
-        display: flex;
-        justify-content: space-between;
-        margin: 6px 0;
-        font-size: 0.88rem;
-        color: #c9d1d9;
-    }
+    .top-badge { background: linear-gradient(90deg, #d29922, #f59e0b); color: #000; font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 10px; display: inline-block; }
+    .card-header { font-size: 1.25rem; font-weight: 700; color: #f0f6fc; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .card-metric { display: flex; justify-content: space-between; margin: 6px 0; font-size: 0.88rem; color: #c9d1d9; }
     .metric-label { color: #8b949e; font-weight: 500; }
     .num { font-variant-numeric: tabular-nums; font-family: 'JetBrains Mono', monospace; }
     
-    /* Dynamic Entry Banners */
-    .entry-banner-in {
-        background: rgba(46,160,67,0.15);
-        border: 1px solid rgba(46,160,67,0.4);
-        color: #3fb950;
-        padding: 6px 10px;
-        border-radius: 6px;
-        font-size: 0.78rem;
-        font-weight: 600;
-        text-align: center;
-        margin: 8px 0;
-    }
-    .entry-banner-chase {
-        background: rgba(248,81,73,0.12);
-        border: 1px solid rgba(248,81,73,0.35);
-        color: #ff7b72;
-        padding: 6px 10px;
-        border-radius: 6px;
-        font-size: 0.78rem;
-        font-weight: 600;
-        text-align: center;
-        margin: 8px 0;
-    }
-    .entry-banner-wait {
-        background: rgba(210,153,34,0.15);
-        border: 1px solid rgba(210,153,34,0.35);
-        color: #e3b341;
-        padding: 6px 10px;
-        border-radius: 6px;
-        font-size: 0.78rem;
-        font-weight: 600;
-        text-align: center;
-        margin: 8px 0;
-    }
-    .adverse-warning {
-        background: rgba(248,81,73,0.1);
-        border-left: 3px solid #f85149;
-        color: #ff7b72;
-        padding: 6px 10px;
-        font-size: 0.75rem;
-        border-radius: 0 6px 6px 0;
-        margin-top: 8px;
-        line-height: 1.4;
-    }
+    .entry-banner-in { background: rgba(46,160,67,0.15); border: 1px solid rgba(46,160,67,0.4); color: #3fb950; padding: 6px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; text-align: center; margin: 8px 0; }
+    .entry-banner-chase { background: rgba(248,81,73,0.12); border: 1px solid rgba(248,81,73,0.35); color: #ff7b72; padding: 6px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; text-align: center; margin: 8px 0; }
+    .entry-banner-wait { background: rgba(210,153,34,0.15); border: 1px solid rgba(210,153,34,0.35); color: #e3b341; padding: 6px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; text-align: center; margin: 8px 0; }
     
-    .badge {
-        background:#21262d;
-        padding:3px 8px;
-        border-radius:8px;
-        font-size:0.72rem;
-        color:#c9d1d9;
-        white-space:nowrap;
-        display:inline-block;
-        font-weight: 500;
-    }
-    .score-track {
-        background:#21262d;
-        border-radius:6px;
-        height:6px;
-        width:100%;
-        overflow:hidden;
-        margin-top:4px;
-        margin-bottom: 10px;
-    }
+    .adverse-warning { background: rgba(248,81,73,0.1); border-left: 3px solid #f85149; color: #ff7b72; padding: 6px 10px; font-size: 0.75rem; border-radius: 0 6px 6px 0; margin-top: 8px; line-height: 1.4; }
+    .leverage-highlight { background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; }
+    
+    .badge { background:#21262d; padding:3px 8px; border-radius:8px; font-size:0.72rem; color:#c9d1d9; white-space:nowrap; display:inline-block; font-weight: 500; }
+    .score-track { background:#21262d; border-radius:6px; height:6px; width:100%; overflow:hidden; margin-top:4px; margin-bottom: 10px; }
     .score-fill { height:100%; }
-    .disclaimer {
-        font-size:0.75rem;
-        color:#8b949e;
-        margin-top:40px;
-        padding-top:15px;
-        border-top:1px solid #21262d;
-        line-height:1.6;
-        text-align: center;
-    }
+    .disclaimer { font-size:0.75rem; color:#8b949e; margin-top:40px; padding-top:15px; border-top:1px solid #21262d; line-height:1.6; text-align: center; }
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="main-title">⚡ Nexus Quant Scalper</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">Perpetual Futures Confluence Scanner • Real-Time Entry Zone & Duration Engine</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-title">Perpetual Futures Scanner • Real-Time Trade Tracking & Leverage Engine</div>', unsafe_allow_html=True)
 
 # ============================================================================
 # CONSTANTS & CACHING
@@ -192,7 +72,7 @@ def normalize_ticker(raw_input: str) -> str:
     return re.sub(r'[^A-Z0-9]', '', cleaned)
 
 # ============================================================================
-# GLOBAL FUTURES MARKET LAYER (Hyperliquid DEX - Zero Geo-Blocking)
+# GLOBAL FUTURES MARKET LAYER
 # ============================================================================
 @st.cache_data(ttl=60, show_spinner=False)
 def fetch_global_futures_market():
@@ -210,6 +90,7 @@ def fetch_global_futures_market():
                 mark_px = float(ctx.get("markPx", 0))
                 prev_px = float(ctx.get("prevDayPx", 1))
                 market_dict[coin] = {
+                    "mark_px": mark_px,
                     "turnover": float(ctx.get("dayNtlVlm", 0)),
                     "chg_pct": ((mark_px - prev_px) / prev_px * 100) if prev_px > 0 else 0,
                     "funding_rate": float(ctx.get("funding", 0)),
@@ -230,15 +111,15 @@ DYNAMIC_COINS = sorted(list(set(
 # ============================================================================
 if "custom_coins_added" not in st.session_state:
     st.session_state.custom_coins_added = []
+if "trade_history" not in st.session_state:
+    st.session_state.trade_history = []
 
-# Merge standard options with user-added custom tokens
 ALL_AVAILABLE_OPTIONS = sorted(list(set(DYNAMIC_COINS + st.session_state.custom_coins_added)))
 
 if "matrix_multiselect" not in st.session_state:
     default_init = ["BTC", "ETH", "SOL", "PEPE", "SUI", "WIF"]
     st.session_state.matrix_multiselect = [c for c in default_init if c in ALL_AVAILABLE_OPTIONS]
 
-# Preset Callbacks
 def apply_preset(preset_type: str):
     df_mkt = pd.DataFrame.from_dict(GLOBAL_MARKET, orient='index') if GLOBAL_MARKET else pd.DataFrame()
     if preset_type == "Majors":
@@ -252,7 +133,6 @@ def apply_preset(preset_type: str):
         target = []
     else:
         target = ["BTC", "ETH", "SOL"]
-    
     st.session_state.matrix_multiselect = [c for c in target if c in ALL_AVAILABLE_OPTIONS]
 
 def add_custom_ticker():
@@ -269,7 +149,6 @@ def add_custom_ticker():
 # SIDEBAR
 # ============================================================================
 st.sidebar.markdown("### 🔍 Market Screener")
-
 st.sidebar.text_input("➕ Add Custom Coin (e.g. KAS, APT):", key="custom_ticker_input", on_change=add_custom_ticker)
 
 st.sidebar.markdown("**Global Smart Presets:**")
@@ -280,7 +159,6 @@ col3, col4 = st.sidebar.columns(2)
 col3.button("💎 Default Majors", on_click=apply_preset, args=("Majors",), use_container_width=True)
 col4.button("🗑️ Clear Matrix", on_click=apply_preset, args=("Clear",), use_container_width=True)
 
-# Synchronize options to prevent StreamlitDefaultNotInOptionsError
 CURRENT_OPTIONS = sorted(list(set(DYNAMIC_COINS + st.session_state.custom_coins_added)))
 st.session_state.matrix_multiselect = [c for c in st.session_state.matrix_multiselect if c in CURRENT_OPTIONS]
 
@@ -332,7 +210,6 @@ def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
 
 @st.cache_data(ttl=CACHE_TTL, show_spinner=False)
 def fetch_candles(coin_symbol: str, tf: str):
-    # Tier 1: CoinDCX Futures (Routes Binance Perp Liquidity)
     url_coindcx = f"https://public.coindcx.com/market_data/candles/?pair=B-{coin_symbol}_USDT&interval={tf}&limit={HISTORY_BARS}"
     try:
         res = requests.get(url_coindcx, timeout=3.5)
@@ -344,7 +221,6 @@ def fetch_candles(coin_symbol: str, tf: str):
     except Exception:
         pass
 
-    # Tier 2: Hyperliquid DEX (Zero geo-restrictions)
     hl_interval = {"1m": "1m", "5m": "5m", "15m": "15m"}.get(tf, "5m")
     hl_ms = {"1m": 60000, "5m": 300000, "15m": 900000}.get(tf, 300000)
     end_time = int(time.time() * 1000)
@@ -372,12 +248,6 @@ def format_price(p):
     if p is None or pd.isna(p): return "-"
     return f"{p:,.2f}" if p >= 1000 else f"{p:.4f}" if p >= 1 else f"{p:.5f}" if p >= 0.01 else f"{p:.7f}"
 
-def format_compact(n):
-    if not n or pd.isna(n): return "N/A"
-    for unit, div in (("B", 1e9), ("M", 1e6), ("K", 1e3)):
-        if abs(n) >= div: return f"{n/div:.2f}{unit}"
-    return f"{n:.2f}"
-
 def evaluate_signal(coin_name: str):
     df, source = fetch_candles(coin_name, timeframe)
     if df is None or df.empty:
@@ -385,10 +255,12 @@ def evaluate_signal(coin_name: str):
 
     last = df.iloc[-1]
     prev = df.iloc[-2]
-    price, atr, rsi = last['close'], last['ATR'], last['RSI']
+    price, atr, rsi = float(last['close']), float(last['ATR']), float(last['RSI'])
     
-    bull_ema, bear_ema = last['EMA_9'] > last['EMA_21'], last['EMA_9'] < last['EMA_21']
-    bull_macd, bear_macd = last['MACD_Hist'] > 0, last['MACD_Hist'] < 0
+    bull_ema = last['EMA_9'] > last['EMA_21']
+    bear_ema = last['EMA_9'] < last['EMA_21']
+    bull_macd = last['MACD_Hist'] > 0
+    bear_macd = last['MACD_Hist'] < 0
 
     mtf_aligned, htf_status = True, "N/A"
     if enable_mtf and timeframe != "15m":
@@ -401,56 +273,36 @@ def evaluate_signal(coin_name: str):
 
     direction = "LONG" if bull_ema and bull_macd and mtf_aligned else "SHORT" if bear_ema and bear_macd and mtf_aligned else "NONE"
     
-    # Execution targets
     entry = price
-    sl = price - (sl_atr_mult * atr) if direction == "LONG" else price + (sl_atr_mult * atr) if direction == "SHORT" else 0
-    tp = price + (tp_atr_mult * atr) if direction == "LONG" else price - (tp_atr_mult * atr) if direction == "SHORT" else 0
+    sl = price - (sl_atr_mult * atr) if direction == "LONG" else price + (sl_atr_mult * atr) if direction == "SHORT" else 0.0
+    tp = price + (tp_atr_mult * atr) if direction == "LONG" else price - (tp_atr_mult * atr) if direction == "SHORT" else 0.0
     
-    # Entry zone validation
     entry_status, entry_css = "NEUTRAL", "entry-banner-wait"
     entry_low, entry_high = 0, 0
     if direction == "LONG":
-        entry_low = entry - (0.25 * atr)
-        entry_high = entry + (0.15 * atr)
-        if entry_low <= price <= entry_high:
-            entry_status, entry_css = "🎯 IN PRIME ENTRY ZONE", "entry-banner-in"
-        elif price > entry_high:
-            entry_status, entry_css = "⚠️ OVEREXTENDED (Chasing Risk)", "entry-banner-chase"
-        else:
-            entry_status, entry_css = "⏳ WAIT FOR PULLBACK TO ZONE", "entry-banner-wait"
+        entry_low, entry_high = entry - (0.25 * atr), entry + (0.15 * atr)
+        if entry_low <= price <= entry_high: entry_status, entry_css = "🎯 IN PRIME ENTRY ZONE", "entry-banner-in"
+        elif price > entry_high: entry_status, entry_css = "⚠️ OVEREXTENDED (Chasing)", "entry-banner-chase"
+        else: entry_status, entry_css = "⏳ WAIT FOR PULLBACK", "entry-banner-wait"
     elif direction == "SHORT":
-        entry_low = entry - (0.15 * atr)
-        entry_high = entry + (0.25 * atr)
-        if entry_low <= price <= entry_high:
-            entry_status, entry_css = "🎯 IN PRIME ENTRY ZONE", "entry-banner-in"
-        elif price < entry_low:
-            entry_status, entry_css = "⚠️ OVEREXTENDED (Chasing Risk)", "entry-banner-chase"
-        else:
-            entry_status, entry_css = "⏳ WAIT FOR PULLBACK TO ZONE", "entry-banner-wait"
+        entry_low, entry_high = entry - (0.15 * atr), entry + (0.25 * atr)
+        if entry_low <= price <= entry_high: entry_status, entry_css = "🎯 IN PRIME ENTRY ZONE", "entry-banner-in"
+        elif price < entry_low: entry_status, entry_css = "⚠️ OVEREXTENDED (Chasing)", "entry-banner-chase"
+        else: entry_status, entry_css = "⏳ WAIT FOR PULLBACK", "entry-banner-wait"
 
-    # Expected trade duration calculation
     tf_minutes = {"1m": 1, "5m": 5, "15m": 15}.get(timeframe, 5)
     tp_distance = abs(tp - price)
     expected_bars = max(1.0, tp_distance / (atr * 0.65 + 1e-9))
     est_minutes = int(expected_bars * tf_minutes)
     tp_duration_str = f"~{est_minutes}–{int(est_minutes * 1.5)} min" if direction != "NONE" else "N/A"
 
-    # Adverse momentum warnings
     adverse_warning = None
     if direction == "LONG":
-        if last['MACD_Hist'] < prev['MACD_Hist']:
-            adverse_warning = "⚠️ Warning: MACD histogram momentum decelerating."
-        elif price < last['EMA_9']:
-            adverse_warning = "⚠️ Caution: Price losing 9 EMA dynamic support."
-        elif price < last['VWAP']:
-            adverse_warning = "⚠️ Caution: Price lost Session VWAP."
+        if last['MACD_Hist'] < prev['MACD_Hist']: adverse_warning = "⚠️ Warning: MACD histogram momentum decelerating."
+        elif price < last['EMA_9']: adverse_warning = "⚠️ Caution: Price losing 9 EMA dynamic support."
     elif direction == "SHORT":
-        if last['MACD_Hist'] > prev['MACD_Hist']:
-            adverse_warning = "⚠️ Warning: Bearish momentum slowing (MACD curling up)."
-        elif price > last['EMA_9']:
-            adverse_warning = "⚠️ Caution: Price piercing above 9 EMA resistance."
-        elif price > last['VWAP']:
-            adverse_warning = "⚠️ Caution: Price reclaimed Session VWAP."
+        if last['MACD_Hist'] > prev['MACD_Hist']: adverse_warning = "⚠️ Warning: Bearish momentum slowing (MACD curling up)."
+        elif price > last['EMA_9']: adverse_warning = "⚠️ Caution: Price piercing above 9 EMA resistance."
 
     risk_pct = abs(entry - sl) / entry if direction != "NONE" and entry > 0 else 0.0
     lev = int(min(max(1.0 / (liq_buffer_mult * risk_pct + 0.005), 2), 50)) if direction != "NONE" else 1
@@ -467,18 +319,19 @@ def evaluate_signal(coin_name: str):
     mkt = GLOBAL_MARKET.get(coin_name, {})
     return {
         "Coin": coin_name, "Signal": direction, "Price": format_price(price),
-        "RawPrice": price, "Entry": format_price(entry), "SL": format_price(sl), "TP": format_price(tp),
+        "RawPrice": price, "RawSL": sl, "RawTP": tp,
+        "Entry": format_price(entry), "SL": format_price(sl), "TP": format_price(tp),
         "EntryZone": f"${format_price(entry_low)} - ${format_price(entry_high)}",
         "EntryStatus": entry_status, "EntryCSS": entry_css,
         "TPDuration": tp_duration_str, "AdverseWarning": adverse_warning,
-        "Lev": f"{lev}x", "LiqPrice": format_price(liq_price) if liq_price else "-", "PosUSD": pos_usd,
+        "Lev": lev, "LiqPrice": format_price(liq_price) if liq_price else "-", "PosUSD": pos_usd,
         "Score": round(min(score, 100.0), 1), "HTF": htf_status, "MACD": "🟢 Bull" if bull_macd else "🔴 Bear",
         "RSI": round(rsi, 1), "ATR": f"{last['ATR_Pct']:.2f}%", "Vol": f"{last['Vol_Ratio']:.1f}x",
         "Funding": mkt.get("funding_rate"), "OI": mkt.get("oi_usd"), "Source": source, "Error": False
     }
 
 # ============================================================================
-# EXECUTION & SCANNER
+# EXECUTION & TRADE TRACKER UPDATER
 # ============================================================================
 if refresh_clicked:
     fetch_candles.clear()
@@ -486,10 +339,40 @@ if refresh_clicked:
 
 results = []
 if selected_coins:
-    with st.spinner(f"Scanning {len(selected_coins)} assets via Confluence Engine..."):
+    with st.spinner(f"Scanning {len(selected_coins)} assets & Updating Trade History..."):
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
             raw = list(executor.map(evaluate_signal, selected_coins))
         results = [r for r in raw if not r.get("Error")]
+
+        # 1. Update Existing Trades in History
+        for trade in st.session_state.trade_history:
+            if trade['Status'] == 'In Progress':
+                curr_px = GLOBAL_MARKET.get(trade['Coin'], {}).get('mark_px')
+                if curr_px:
+                    if trade['Signal'] == 'LONG':
+                        if curr_px >= trade['RawTP']: trade['Status'] = '🎯 TP Hit'
+                        elif curr_px <= trade['RawSL']: trade['Status'] = '🛑 SL Hit'
+                    elif trade['Signal'] == 'SHORT':
+                        if curr_px <= trade['RawTP']: trade['Status'] = '🎯 TP Hit'
+                        elif curr_px >= trade['RawSL']: trade['Status'] = '🛑 SL Hit'
+
+        # 2. Add New Setups to History
+        active_tracked_coins = [t['Coin'] for t in st.session_state.trade_history if t['Status'] == 'In Progress']
+        for res in results:
+            if res['Signal'] in ['LONG', 'SHORT'] and res['Coin'] not in active_tracked_coins:
+                st.session_state.trade_history.insert(0, {
+                    'Time': datetime.now().strftime("%H:%M"),
+                    'Coin': res['Coin'],
+                    'Signal': res['Signal'],
+                    'RawEntry': res['RawPrice'],
+                    'RawSL': res['RawSL'],
+                    'RawTP': res['RawTP'],
+                    'Lev': res['Lev'],
+                    'Status': 'In Progress'
+                })
+        
+        # 3. Limit to latest 5 entries
+        st.session_state.trade_history = st.session_state.trade_history[:5]
 
 # ============================================================================
 # RENDERING
@@ -506,6 +389,27 @@ if results:
     m4.metric("Last Refresh", datetime.now().strftime("%H:%M:%S"))
 
     st.markdown("---")
+    
+    # ---------------- TRADE HISTORY TRACKER UI ----------------
+    if st.session_state.trade_history:
+        st.markdown("### 🕰️ Setup History & Live Status (Last 5)")
+        history_df = pd.DataFrame(st.session_state.trade_history)
+        history_df['Entry'] = history_df['RawEntry'].apply(lambda x: f"${format_price(x)}")
+        history_df['SL'] = history_df['RawSL'].apply(lambda x: f"${format_price(x)}")
+        history_df['TP'] = history_df['RawTP'].apply(lambda x: f"${format_price(x)}")
+        
+        def highlight_status(val):
+            if 'TP Hit' in val: return 'color: #3fb950; font-weight: bold;'
+            if 'SL Hit' in val: return 'color: #f85149; font-weight: bold;'
+            return 'color: #38bdf8; font-weight: bold;'
+
+        st.dataframe(
+            history_df[['Time', 'Coin', 'Signal', 'Lev', 'Entry', 'SL', 'TP', 'Status']].style.map(highlight_status, subset=['Status']),
+            use_container_width=True, hide_index=True
+        )
+        st.markdown("---")
+
+    # ---------------- ACTIVE SETUPS UI ----------------
     st.markdown("### ⚡ Validated Scalp Trade Setups")
 
     if not active_setups.empty:
@@ -519,7 +423,7 @@ if results:
             top_badge_html = '<div class="top-badge">⭐ #1 Top Confluence Setup</div>' if is_top else ''
             warning_html = f'<div class="adverse-warning">{row["AdverseWarning"]}</div>' if row['AdverseWarning'] else ''
 
-            # Zero-indent string to prevent Streamlit Markdown from interpreting it as raw code
+            # Zero-indent string to prevent Streamlit Markdown <pre> rendering bug
             card_html = (
                 f'<div class="trade-card {card_class}">'
                 f'{top_badge_html}'
@@ -532,8 +436,8 @@ if results:
                 f'<div class="card-metric"><span class="metric-label">Ideal Entry Pocket</span><span class="num" style="color:#f0f6fc;">{row["EntryZone"]}</span></div>'
                 f'<div class="card-metric"><span class="metric-label">Stop-Loss (SL)</span><span class="num" style="color:#8b949e;">${row["SL"]}</span></div>'
                 f'<div class="card-metric"><span class="metric-label">Target (TP)</span><span class="num" style="color:#f0f6fc;">${row["TP"]}</span></div>'
-                f'<div class="card-metric"><span class="metric-label">Est. Time to TP</span><span class="num" style="color:#38bdf8; font-weight:600;">{row["TPDuration"]}</span></div>'
-                f'<div class="card-metric"><span class="metric-label">Est. Liq ({row["Lev"]})</span><span class="num" style="color:#e3b341;">${row["LiqPrice"]}</span></div>'
+                f'<div class="card-metric"><span class="metric-label" style="color:#38bdf8; font-weight:700;">Recommended Leverage</span><span class="leverage-highlight">{row["Lev"]}x</span></div>'
+                f'<div class="card-metric"><span class="metric-label">Est. Time to TP</span><span class="num" style="color:#8b949e;">{row["TPDuration"]}</span></div>'
                 f'{warning_html}'
                 f'<hr style="border:0; height:1px; background:#30363d; margin:12px 0;">'
                 f'<div class="card-metric"><span class="metric-label">Setup Strength</span><span class="num">{row["Score"]:.0f}/100</span></div>'
@@ -542,7 +446,6 @@ if results:
                 f'<span class="badge">HTF {row["HTF"]}</span>'
                 f'<span class="badge">RSI {row["RSI"]}</span>'
                 f'<span class="badge">Vol {row["Vol"]}</span>'
-                f'<span class="badge" style="color:#8b949e;">{row["Source"]}</span>'
                 f'</div>'
                 f'<div class="card-metric" style="margin-top:12px;"><span class="metric-label">Suggested Position</span><span class="num" style="color:#f0f6fc;">${row["PosUSD"]:,.0f}</span></div>'
                 f'</div>'
@@ -554,21 +457,6 @@ if results:
                 cols[i % 3].markdown(card_html, unsafe_allow_html=True)
     else:
         st.info("Market is currently consolidating. No high-conviction scalping confluence detected.")
-
-    st.markdown("---")
-    st.markdown("### 📊 Market Confluence Table")
-    view_df = df[['Coin', 'Signal', 'Price', 'EntryZone', 'EntryStatus', 'TPDuration', 'HTF', 'Score']].sort_values(by=['Score', 'Coin'], ascending=[False, True])
-    st.dataframe(
-        view_df.style.map(lambda x: 'color: #3fb950; font-weight: bold;' if 'LONG' in str(x) else ('color: #f85149; font-weight: bold;' if 'SHORT' in str(x) else ''), subset=['Signal']),
-        column_config={
-            "Score": st.column_config.ProgressColumn("Setup Score", min_value=0, max_value=100, format="%.0f"),
-            "EntryZone": "Optimal Pocket",
-            "EntryStatus": "Execution Status",
-            "TPDuration": "Est. Duration"
-        },
-        use_container_width=True,
-        hide_index=True
-    )
 
 st.markdown('<div class="disclaimer">Algorithmic execution scanner. Perpetual futures trading involves market risk. Always confirm execution order on your primary exchange.</div>', unsafe_allow_html=True)
 
