@@ -189,10 +189,13 @@ col3.button("💎 Default Majors", on_click=apply_preset, args=("Majors",), use_
 col4.button("🗑️ Clear Matrix", on_click=apply_preset, args=("Clear",), use_container_width=True)
 
 st.sidebar.markdown("---")
+# Filter the watchlist to only include coins that actually exist in the fetched options
+valid_defaults = [coin for coin in st.session_state.active_watchlist if coin in ALL_COINS_DYNAMIC]
+
 selected_coins = st.sidebar.multiselect(
     "Active Scanning Matrix (Top Priority):",
     options=ALL_COINS_DYNAMIC,
-    default=st.session_state.active_watchlist,
+    default=valid_defaults,
     key="matrix_multiselect"
 )
 st.session_state.active_watchlist = selected_coins
